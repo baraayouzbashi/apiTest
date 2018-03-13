@@ -4,6 +4,7 @@ var app = express();
 var PORT = process.env.PORT || 3000;
 var dummyData = [];
 var id =1;
+var _ = require('underscore');
 
 app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded({ extended: true }));
@@ -43,25 +44,49 @@ app.get('/dishs',function(req,res){
 
 // GET /data/:id
 app.get('/dishs/:id',function(req,res){
-	var id = parseInt(req.params.id);
-	for (var i =0;i< dummyData.length;i++){
-		if (dummyData[i].id === id){
-			res.json(dummyData[i]);
-		}
+	var reqId = parseInt(req.params.id);
+	var result = _.findWhere(dummyData,{id:reqId});
+	if (result){
+		res.json(result);
+	} else {
+		res.status(404).send();
 	}
-	res.status(404).send();
+	// for (var i =0;i< dummyData.length;i++){
+	// 	if (dummyData[i].id === id){
+	// 		res.json(dummyData[i]);
+	// 	}
+	// }
+	// res.status(404).send();
 });
+ function validation(argument) {
+ 	var ret = true;
+ 	argument.forEach(function(element) {
+		if (_.isString(element) && element.trim().length===0){
+			console.log("inside");
+			ret =  false;
+		}
+	});
+	return ret;
+ }
 
 app.post('/dishs',function(req,res){
-	var body = req.body;
-	console.log(body.name);
+	var body = _.pick(req.body,'name','desc');
+	
+	if (!validation(_.values(body))){
+		console.log("1");
+		return res.status(400).send();
+	}
+	body.ing = _.pick(req.body.ing,'name','amount','unit');
+	if (!validation(_.values(body.ing))){
+				console.log("2");
+
+		return res.status(400).send();
+	}
+	
 	dummyData.push(body);
-	// console.log(dummyData);
 	dummyData[dummyData.length-1].id = id;
-	// console.log(dummyData);
 	id++;
-	// console.log(id);
-	res.json(body.ing);
+	return res.json(body);
 });
 
 app.listen(PORT,function(){
