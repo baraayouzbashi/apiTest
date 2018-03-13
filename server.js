@@ -6,7 +6,7 @@ var dummyData = [];
 var id =1;
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(bodyParser.urlencoded({ extended: true }));
 
 // var ing1 = {
 // 		name:'meat',
