@@ -62,7 +62,6 @@ app.get('/dishs/:id',function(req,res){
  	var ret = true;
  	argument.forEach(function(element) {
 		if (_.isString(element) && element.trim().length===0){
-			console.log("inside");
 			ret =  false;
 		}
 	});
@@ -71,22 +70,28 @@ app.get('/dishs/:id',function(req,res){
 
 app.post('/dishs',function(req,res){
 	var body = _.pick(req.body,'name','desc');
-	
 	if (!validation(_.values(body))){
-		console.log("1");
-		return res.status(400).send();
+		return res.status(400).send(); //Bad Request , invalid data
 	}
 	body.ing = _.pick(req.body.ing,'name','amount','unit');
 	if (!validation(_.values(body.ing))){
-				console.log("2");
-
-		return res.status(400).send();
+		return res.status(400).send(); //Bad Request , invalid data
 	}
-	
 	dummyData.push(body);
 	dummyData[dummyData.length-1].id = id;
 	id++;
 	return res.json(body);
+});
+
+app.delete('/dishs/:id',function(req,res){
+	var delId = parseInt(req.params.id);
+	var delItem = _.findWhere(dummyData,{id:delId});
+	if(!delItem){
+		return res.status(404).send();
+		// return res.status(404).json({"error":" error discription goes here"});
+	}
+	dummyData = _.without(dummyData,delItem);
+	res.status(200).json(delItem);
 });
 
 app.listen(PORT,function(){
