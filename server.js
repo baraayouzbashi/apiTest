@@ -39,6 +39,10 @@ app.get('/',function(req,res){
 
 // GET /data
 app.get('/dishs',function(req,res){
+	//var queryParams = req.query;
+	if (_.has(req.query,'type')){
+		return res.json(_.where(dummyData,{type:req.query.type}))
+	}
 	res.json(dummyData);
 });
 
@@ -69,7 +73,7 @@ app.get('/dishs/:id',function(req,res){
  }
 
 app.post('/dishs',function(req,res){
-	var body = _.pick(req.body,'name','desc');
+	var body = _.pick(req.body,'name','desc','type');
 	if (!validation(_.values(body))){
 		return res.status(400).send(); //Bad Request , invalid data
 	}
@@ -92,6 +96,46 @@ app.delete('/dishs/:id',function(req,res){
 	}
 	dummyData = _.without(dummyData,delItem);
 	res.status(200).json(delItem);
+});
+
+function validStrUpdate(obj,prop,objDotProp,alternative) {
+	if(_.has(obj,prop) && _.isString(objDotProp) && objDotProp.trim().length >0 ){
+		return objDotProp;
+	} else if(_.has(obj,prop) && ! _.isString(objDotProp)){
+		return -1 ;
+	}
+	return alternative;
+}
+
+function validNumUpdate(obj,prop,objDotProp,alternative) {
+	if (_.has(obj,prop) && _.isNumber(objDotProp) ){
+		return objDotProp ;
+	} else if(_.has(obj,prop)){
+		return -1;
+	}
+	return alternative;
+}
+
+app.put('/dishs/:id',function(req,res){
+	var upId = parseInt(req.params.id);
+	var upItem = _.findWhere(dummyData,{id:upId});
+	if (!upItem){
+		return res.status(404).send();
+	}
+	var validAttributes = {};
+		validAttributes.name = validStrUpdate(req.body,'name',req.body.name,upItem.name);
+		validAttributes.desc = validStrUpdate(req.body,'desc',req.body.desc,upItem.desc);
+		validAttributes.type = validStrUpdate(req.body,'type',req.body.type,upItem.type);
+		
+	if (_.has(req.body,"ing")){
+		validAttributes.ing = {};
+		validAttributes.ing.name = validStrUpdate(req.body.ing,'name',req.body.ing.name,upItem.ing.name);
+		validAttributes.ing.amount = validNumUpdate(req.body.ing,'amount',req.body.ing.amount,upItem.ing.amount);
+		validAttributes.ing.unit = validStrUpdate(req.body.ing,'unit',req.body.ing.unit,upItem.ing.unit);
+
+	}
+	_.extend(upItem,validAttributes);
+	res.status(200).json(upItem);
 });
 
 app.listen(PORT,function(){
